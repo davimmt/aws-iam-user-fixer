@@ -15,9 +15,6 @@ DAYS_TO_DELETE_KEY = int(os.environ['DAYS_TO_DELETE_KEY'])
 IGNORE_USERS = tuple(os.environ['IGNORE_USERS'].split(','))
 IGNORE_KEYS = tuple(os.environ['IGNORE_KEYS'].split(','))
 
-print(IGNORE_USERS)
-exit()
-
 OUTPUT_BUCKET_NAME = os.environ['OUTPUT_BUCKET_NAME']
 
 PRINT_PADDING = 18
