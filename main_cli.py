@@ -1,14 +1,18 @@
 import boto3
 from iam_user_keys import *
 import datetime
+import os
 
-BOOL_DEACTIVATE_CONSOLE_ACCESS = 0
+BOOL_DEACTIVATE_CONSOLE_ACCESS = 1
 BOOL_DEACTIVATE_KEY = 0
 BOOL_DELETE_KEY = 0
 
 DAYS_TO_DEACTIVATE_CONSOLE_ACCESS = 0
 DAYS_TO_DEACTIVATE_KEY = 90
 DAYS_TO_DELETE_KEY = 180
+
+IGNORE_USERS = ()
+IGNORE_KEYS = ()
 
 PRINT_PADDING = 18
 
@@ -30,7 +34,7 @@ for user in iam_.users.all():
         
         if diff >= DAYS_TO_DEACTIVATE_CONSOLE_ACCESS:
             print('[CONSOLE] [DELETE]'.ljust(PRINT_PADDING), user.user_name, 'is', diff, 'days idle')
-            if BOOL_DEACTIVATE_CONSOLE_ACCESS: iam.delete_login_profile(UserName=user.user_name)
+            if BOOL_DEACTIVATE_CONSOLE_ACCESS and user.user_name not in IGNORE_USERS: iam.delete_login_profile(UserName=user.user_name)
 
     # Programatic access
     for key in iam.list_access_keys(UserName=user.user_name)['AccessKeyMetadata']:
@@ -44,7 +48,7 @@ for user in iam_.users.all():
         
         if diff >= DAYS_TO_DELETE_KEY:
             print('[KEY]     [DELETE]'.ljust(PRINT_PADDING), key_id, 'is', diff, 'days idle')
-            if BOOL_DELETE_KEY: delete_key(user.user_name, key_id)
+            if BOOL_DELETE_KEY and key_id not in IGNORE_KEYS: delete_key(user.user_name, key_id)
         elif diff >= DAYS_TO_DEACTIVATE_KEY and diff < DAYS_TO_DELETE_KEY:
             print('[KEY] [DEACTIVATE]'.ljust(PRINT_PADDING), key_id, 'is', diff, 'days idle')
-            if BOOL_DEACTIVATE_KEY: update_key(user.user_name, key_id, False)
+            if BOOL_DEACTIVATE_KEY and key_id not in IGNORE_KEYS: update_key(user.user_name, key_id, False)

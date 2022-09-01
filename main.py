@@ -11,6 +11,10 @@ DAYS_TO_DEACTIVATE_CONSOLE_ACCESS = int(os.environ['DAYS_TO_DEACTIVATE_CONSOLE_A
 DAYS_TO_DEACTIVATE_KEY = int(os.environ['DAYS_TO_DEACTIVATE_KEY'])
 DAYS_TO_DELETE_KEY = int(os.environ['DAYS_TO_DELETE_KEY'])
 
+# Separete users and access keys by comma (,)
+IGNORE_USERS = tuple(os.environ['IGNORE_USERS'].split(','))
+IGNORE_KEYS = tuple(os.environ['IGNORE_KEYS'].split(','))
+
 OUTPUT_BUCKET_NAME = os.environ['OUTPUT_BUCKET_NAME']
 
 PRINT_PADDING = 18
@@ -32,6 +36,9 @@ def lambda_handler(event, context):
         file.write(f"DAYS_TO_DEACTIVATE_CONSOLE_ACCESS: {DAYS_TO_DEACTIVATE_CONSOLE_ACCESS}\n")
         file.write(f"DAYS_TO_DEACTIVATE_KEY: {DAYS_TO_DEACTIVATE_KEY}\n")
         file.write(f"DAYS_TO_DELETE_KEY: {DAYS_TO_DELETE_KEY}\n")
+        file.write('------------\n\n')
+        file.write(f"IGNORE_USERS: {IGNORE_USERS}\n")
+        file.write(f"IGNORE_KEYS: {IGNORE_KEYS}\n")
         file.write('============\n\n')
         
         for user in iam_.users.all():
@@ -48,7 +55,7 @@ def lambda_handler(event, context):
                 
                 if diff >= DAYS_TO_DEACTIVATE_CONSOLE_ACCESS:
                     file.write(f"{'[CONSOLE] [DELETE]'.ljust(PRINT_PADDING)} {user.user_name} is {diff} days idle\n")
-                    if BOOL_DEACTIVATE_CONSOLE_ACCESS: iam.delete_login_profile(UserName=user.user_name)
+                    if BOOL_DEACTIVATE_CONSOLE_ACCESS and user.user_name not in IGNORE_USERS: iam.delete_login_profile(UserName=user.user_name)
     
             # Programatic access
             for key in iam.list_access_keys(UserName=user.user_name)['AccessKeyMetadata']:
@@ -62,9 +69,9 @@ def lambda_handler(event, context):
                 
                 if diff >= DAYS_TO_DELETE_KEY:
                     file.write(f"{'[KEY]     [DELETE]'.ljust(PRINT_PADDING)} {key_id} is {diff} days idle\n")
-                    if BOOL_DELETE_KEY: delete_key(user.user_name, key_id)
+                    if BOOL_DELETE_KEY and key_id not in IGNORE_KEYS: delete_key(user.user_name, key_id)
                 elif diff >= DAYS_TO_DEACTIVATE_KEY and diff < DAYS_TO_DELETE_KEY:
                     file.write(f"{'[KEY] [DEACTIVATE]'.ljust(PRINT_PADDING)} {key_id} is {diff} days idle\n")
-                    if BOOL_DEACTIVATE_KEY: update_key(user.user_name, key_id, False)
+                    if BOOL_DEACTIVATE_KEY and key_id not in IGNORE_KEYS: update_key(user.user_name, key_id, False)
     
     boto3.resource('s3').meta.client.upload_file(output_file_path, OUTPUT_BUCKET_NAME, s3_path)
