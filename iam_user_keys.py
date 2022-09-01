@@ -21,6 +21,25 @@ def list_keys(user_name):
     else:
         return keys
 
+def create_key(user_name):
+    """
+    Creates an access key for the specified user. Each user can have a
+    maximum of two keys.
+
+    :param user_name: The name of the user.
+    :return: The created access key.
+    """
+    try:
+        key_pair = iam.User(user_name).create_access_key_pair()
+        logger.info(
+            "Created access key pair for %s. Key ID is %s.",
+            key_pair.user_name, key_pair.id)
+    except ClientError:
+        logger.exception("Couldn't create access key pair for %s.", user_name)
+        raise
+    else:
+        return key_pair
+
 def get_last_use(key_id):
     """
     Gets information about when and how a key was last used.
@@ -64,16 +83,17 @@ def update_key(user_name, key_id, activate):
 
 def delete_key(user_name, key_id):
     """
-    Deletes a key.
+    Deletes a user's access key.
 
     :param user_name: The user that owns the key.
     :param key_id: The ID of the key to delete.
     """
 
     try:
-        iam.delete_access_key(UserName=user_name, AccessKeyId=key_id)
-        logger.info("Deleted key %s from user %s.", key_id, user_name)
+        key = iam.AccessKey(user_name, key_id)
+        key.delete()
+        logger.info(
+            "Deleted access key %s for %s.", key.id, key.user_name)
     except ClientError:
-        logger.exception(
-            "Couldn't delete key %s from user %s.", key_id, user_name)
+        logger.exception("Couldn't delete key %s for %s", key_id, user_name)
         raise

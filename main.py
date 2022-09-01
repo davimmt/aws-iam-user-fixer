@@ -62,9 +62,9 @@ def lambda_handler(event, context):
                 
                 if diff >= DAYS_TO_DELETE_KEY:
                     file.write(f"{'[KEY]     [DELETE]'.ljust(PRINT_PADDING)} {key_id} is {diff} days idle\n")
-                    if BOOL_DELETE_KEY: delete_key(key.user_name, key_id)
+                    if BOOL_DELETE_KEY: delete_key(user.user_name, key_id)
                 elif diff >= DAYS_TO_DEACTIVATE_KEY and diff < DAYS_TO_DELETE_KEY:
                     file.write(f"{'[KEY] [DEACTIVATE]'.ljust(PRINT_PADDING)} {key_id} is {diff} days idle\n")
-                    if BOOL_DEACTIVATE_KEY: update_key(key.user_name, key_id, False)
+                    if BOOL_DEACTIVATE_KEY: update_key(user.user_name, key_id, False)
     
     boto3.resource('s3').meta.client.upload_file(output_file_path, OUTPUT_BUCKET_NAME, s3_path)
