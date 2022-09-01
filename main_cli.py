@@ -44,7 +44,7 @@ for user in iam_.users.all():
         
         if diff >= DAYS_TO_DELETE_KEY:
             print('[KEY]     [DELETE]'.ljust(PRINT_PADDING), key_id, 'is', diff, 'days idle')
-            if BOOL_DELETE_KEY: delete_key(key.user_name, key_id)
+            if BOOL_DELETE_KEY: delete_key(user.user_name, key_id)
         elif diff >= DAYS_TO_DEACTIVATE_KEY and diff < DAYS_TO_DELETE_KEY:
             print('[KEY] [DEACTIVATE]'.ljust(PRINT_PADDING), key_id, 'is', diff, 'days idle')
-            if BOOL_DEACTIVATE_KEY: update_key(key.user_name, key_id, False)
+            if BOOL_DEACTIVATE_KEY: update_key(user.user_name, key_id, False)
