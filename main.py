@@ -15,6 +15,9 @@ DAYS_TO_DELETE_KEY = int(os.environ['DAYS_TO_DELETE_KEY'])
 IGNORE_USERS = tuple(os.environ['IGNORE_USERS'].split(','))
 IGNORE_KEYS = tuple(os.environ['IGNORE_KEYS'].split(','))
 
+print(IGNORE_USERS)
+exit()
+
 OUTPUT_BUCKET_NAME = os.environ['OUTPUT_BUCKET_NAME']
 
 PRINT_PADDING = 18
@@ -36,7 +39,7 @@ def lambda_handler(event, context):
         file.write(f"DAYS_TO_DEACTIVATE_CONSOLE_ACCESS: {DAYS_TO_DEACTIVATE_CONSOLE_ACCESS}\n")
         file.write(f"DAYS_TO_DEACTIVATE_KEY: {DAYS_TO_DEACTIVATE_KEY}\n")
         file.write(f"DAYS_TO_DELETE_KEY: {DAYS_TO_DELETE_KEY}\n")
-        file.write('------------\n\n')
+        file.write('------------\n')
         file.write(f"IGNORE_USERS: {IGNORE_USERS}\n")
         file.write(f"IGNORE_KEYS: {IGNORE_KEYS}\n")
         file.write('============\n\n')
@@ -59,6 +62,9 @@ def lambda_handler(event, context):
     
             # Programatic access
             for key in iam.list_access_keys(UserName=user.user_name)['AccessKeyMetadata']:
+                # Continue to next key if current key is not active
+                if key['Status'] != 'Active': continue
+
                 key_id = key['AccessKeyId']
                 key_create_date = key['CreateDate'].date()
                 key_last_use = get_last_use(key_id)['AccessKeyLastUsed']

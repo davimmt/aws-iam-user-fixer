@@ -38,6 +38,9 @@ for user in iam_.users.all():
 
     # Programatic access
     for key in iam.list_access_keys(UserName=user.user_name)['AccessKeyMetadata']:
+        # Continue to next key if current key is not active
+        if key['Status'] != 'Active': continue
+
         key_id = key['AccessKeyId']
         key_create_date = key['CreateDate'].date()
         key_last_use = get_last_use(key_id)['AccessKeyLastUsed']
